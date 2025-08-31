@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import JWTWatcher from './JWTWatcher';
 
 export default function Home() {
   const [todos, setTodos] = useState([]);
@@ -38,6 +39,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
       {/* Header */}
+      <JWTWatcher/>
       <header className="w-full max-w-2xl flex justify-between items-center mb-8 px-4">
         <h1 className="text-3xl font-bold text-gray-800">Todo List</h1>
         <div className="flex items-center space-x-4">

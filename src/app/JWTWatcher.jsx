@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 
 export default function JWTWatcher() {
   const [jwt, setJwt] = useState(Cookies.get("jwt"));
-const [session,setSession] = useState(Cookies.get("session"));
+  const [session, setSession] = useState(Cookies.get("session"));
   useEffect(() => {
     const interval = setInterval(() => {
       const newJwt = Cookies.get("jwt");
@@ -25,7 +25,6 @@ const [session,setSession] = useState(Cookies.get("session"));
 
     return () => clearInterval(interval);
   }, [jwt]);
-  
 
   return null; // This component doesn't render anything
 }
