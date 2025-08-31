@@ -8,8 +8,7 @@ export async function createAdminClient() {
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
     .setKey(process.env.NEXT_APPWRITE_KEY);
   const account = new Account(client);
-  const users = new Users(client);
-  return { client, account, databases, users };
+  return { client, account };
 }
 
 export async function createSessionClient(sessionValue) {
@@ -21,6 +20,5 @@ export async function createSessionClient(sessionValue) {
     client.setSession(sessionValue || "");
   }
   const account = new Account(client);
-  const users = new Users(client);
-  return { client, account, databases, users };
+  return { client, account  };
 }
