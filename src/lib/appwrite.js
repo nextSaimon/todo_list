@@ -1,6 +1,6 @@
 "use server";
 
-import { Client, Account, Databases, Users,ID } from "node-appwrite";
+import { Client, Account, Databases, Users, ID } from "node-appwrite";
 
 export async function createAdminClient() {
   const client = new Client()
@@ -13,11 +13,14 @@ export async function createAdminClient() {
   return { client, account, databases, users };
 }
 
-export async function createSessionClient(session) {
+export async function createSessionClient(sessionValue) {
   const client = new Client()
     .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
-    .setSession(session || "");
+    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT);
+
+  if (sessionValue) {
+    client.setSession(sessionValue || "");
+  }
   const account = new Account(client);
   const databases = new Databases(client);
   const users = new Users(client);

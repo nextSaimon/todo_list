@@ -1,6 +1,17 @@
 import { createSessionClient, createAdminClient } from "./lib/appwrite";
 import { ID } from "node-appwrite";
 import { cookies } from "next/headers";
+
+const errorMessages = {
+  userAlreadyExists: "User already exists",
+  invalidPassword:
+    "Password must be between 8 and 265 characters long, and should not be one of the commonly used passwords.",
+  invalidEmail: "Invalid email address",
+  loginError: "Invalid email or password",
+  allFieldsRequired: "All fields are required",
+  default: "Something went wrong",
+};
+
 const auth = {
   user: null,
   setJWT: async (swssionValue) => {
@@ -34,6 +45,11 @@ const auth = {
 
   login: async (email, password) => {
     "use server";
+    if (!email || !password) {
+      return {
+        error: "All fields are required",
+      };
+    }
 
     try {
       const { account } = await createAdminClient();
@@ -64,10 +80,59 @@ const auth = {
       console.log("Error in login......", error);
       if (error?.type == "general_argument_invalid") {
         return {
-          error: "Invalid credentials. Please check the email and password.",
+          error: errorMessages.loginError,
         };
       }
       return { error: error.message };
+    }
+  },
+  signup: async (name, email, password) => {
+    "use server";
+    if (!name || !email || !password) {
+      return {
+        error: "All fields are required",
+      };
+    }
+    try {
+      console.log("signup called", name, email, password);
+      const { account } = await createAdminClient();
+      const result = await account.create(ID.unique(), email, password, name);
+      // console.log("signup result is......", result);
+      const session = await account.createEmailPasswordSession(email, password);
+      // console.log("session created", session);
+      await auth.sendVerifyEmail(session.secret);
+      console.log("Signup successful.....");
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.log("error in signup..", error);
+      if (error?.type == "user_already_exists") {
+        return {
+          error: errorMessages.userAlreadyExists,
+        };
+      }
+      if (error?.message?.includes("Invalid `password` param")) {
+        return {
+          error: errorMessages.invalidPassword,
+        };
+      }
+      return {
+        error: error.message,
+      };
+    }
+  },
+  sendVerifyEmail: async (session) => {
+    "use server";
+    try {
+      const { account } = await createSessionClient(session);
+      const promise = await account.createVerification(
+        "http://localhost:3000/verify-email"
+      );
+      await account.deleteSession("current");
+      return promise;
+    } catch (error) {
+      console.log(error);
     }
   },
 };
