@@ -1,5 +1,5 @@
 // appwriteWeb.js
-import { Client, Account, ID, Databases } from "appwrite";
+import { Client, Account, ID, TablesDB } from "appwrite";
 
 export function createWebClient(jwt) {
   const client = new Client()
@@ -11,7 +11,7 @@ export function createWebClient(jwt) {
   }
 
   const account = new Account(client);
-  const databases = new Databases(client);
+  const tablesDB = new TablesDB(client);
 
-  return { client, account, ID, databases };
+  return { client, account, ID, tablesDB };
 }

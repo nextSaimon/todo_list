@@ -54,6 +54,7 @@ export default function Login_component({ loginAction }) {
               type="email"
               id="email"
               name="email"
+              disabled={loading}
               required
               className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -69,6 +70,7 @@ export default function Login_component({ loginAction }) {
               type="password"
               id="password"
               name="password"
+              disabled={loading}
               required
               className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -92,4 +94,3 @@ export default function Login_component({ loginAction }) {
     </div>
   );
 }
-
