@@ -55,7 +55,15 @@ const auth = {
       const { account } = await createAdminClient();
       const session = await account.createEmailPasswordSession(email, password);
       // console.log("login session is......", session);
-
+      const isVerified = await auth.isVerified(session.secret);
+      console.log("isVerified", isVerified);
+      if (!isVerified) {
+        await auth.sendVerifyEmail(session.secret);
+        await auth.logout(session.secret);
+        return {
+          error: "Email not verified! A new link has been sent to your email.",
+        };
+      }
       (await cookies()).set("session", session.secret, {
         httpOnly: true,
         sameSite: "strict",
@@ -71,8 +79,6 @@ const auth = {
         maxAge: 60 * 15,
         path: "/",
       });
-      // await auth.setJWT(session.secret);
-
       return {
         success: true,
       };
@@ -129,10 +135,55 @@ const auth = {
       const promise = await account.createVerification(
         "http://localhost:3000/verify-email"
       );
+      // console.log(promise);
+
       await account.deleteSession("current");
       return promise;
     } catch (error) {
       console.log(error);
+    }
+  },
+  verifyEmail: async (userId, secret) => {
+    "use server";
+    try {
+      const { account } = await createSessionClient();
+      const promise = await account.updateVerification(userId, secret);
+      // console.log(promise);
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        error: error.message,
+      };
+    }
+  },
+  isVerified: async (sessionValue) => {
+    "use server";
+    try {
+      const { account } = await createSessionClient(sessionValue);
+      const user = await account.get();
+      return user.emailVerification;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  },
+  logout: async (sessionValue) => {
+    "use server";
+    try {
+      const { account } = await createSessionClient(sessionValue);
+      await account.deleteSession("current");
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        error: error.message,
+      };
     }
   },
 };
