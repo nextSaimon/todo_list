@@ -1,8 +1,6 @@
 import { createSessionClient, createAdminClient } from "./lib/appwrite";
-import { createWebClient } from "./lib/appwriteWeb";
 import { ID } from "node-appwrite";
 import { cookies } from "next/headers";
-import { GET } from "./app/api/set-jwt/route";
 const auth = {
   user: null,
   setJWT: async (swssionValue) => {
@@ -32,7 +30,6 @@ const auth = {
     } catch (error) {
       return (auth.user = null);
     }
-    return auth.user;
   },
 
   login: async (email, password) => {

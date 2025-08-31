@@ -31,7 +31,7 @@ export async function middleware(request) {
     response.cookies.set("jwt", jwtToken, {
       httpOnly: false,
       sameSite: "strict",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 15,
       path: "/",
     });
