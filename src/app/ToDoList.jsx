@@ -1,18 +1,27 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import JWTWatcher from "./JWTWatcher";
 
-export default function ToDoList() {
+export default function ToDoList({ rows }) {
+  // Map server rows to local todos state
   const [todos, setTodos] = useState([]);
+
   const [newTodo, setNewTodo] = useState("");
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editedTodoText, setEditedTodoText] = useState("");
   const userName = "User Name"; // Placeholder for user's name
 
+  // Initialize todos when rows come in
+  useEffect(() => {
+    if (rows && rows.length > 0) {
+      setTodos(rows.map((r) => ({ id: r.$id, text: r.task })));
+    }
+  }, [rows]);
+
   const addTodo = () => {
     if (newTodo.trim() !== "") {
-      setTodos([...todos, { id: Date.now(), text: newTodo.trim() }]);
+      setTodos([...todos, { id: Date.now().toString(), text: newTodo.trim() }]);
       setNewTodo("");
     }
   };
@@ -67,9 +76,7 @@ export default function ToDoList() {
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === "Enter") {
-                addTodo();
-              }
+              if (e.key === "Enter") addTodo();
             }}
           />
           <button
@@ -101,9 +108,7 @@ export default function ToDoList() {
                     value={editedTodoText}
                     onChange={(e) => setEditedTodoText(e.target.value)}
                     onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        saveEdit(todo.id);
-                      }
+                      if (e.key === "Enter") saveEdit(todo.id);
                     }}
                     className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
