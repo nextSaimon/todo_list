@@ -1,7 +1,7 @@
-import { createWebClient } from "./lib/appwriteWeb";
+import { client, tablesDB, account } from "@/lib/appwriteWeb";
 import { cookies } from "next/headers";
 import { ID, Permission, Role, Query } from "appwrite";
-import { to } from "./../.next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_c8c997ce._";
+
 const getData = {
   toDoList: async () => {
     const jwtToken = (await cookies()).get("jwt").value;
@@ -10,8 +10,8 @@ const getData = {
     let offset = 0; // use let so we can increment it
 
     try {
-      const { tablesDB } = createWebClient(jwtToken);
-
+      // const { tablesDB } = createWebClient(jwtToken);
+      client.setJWT(jwtToken);
       while (true) {
         const data = await tablesDB.listRows("db1", "todolist", [
           Query.limit(limit),
@@ -39,12 +39,16 @@ const getData = {
 
 const postData = {
   getUser: async (jwtToken) => {
+
     try {
-      const { account } = createWebClient(jwtToken);
-      return await account.get();
+      // const { account } = createWebClient(jwtToken);
+      client.setJWT(jwtToken);
+      const user = await account.get();
+
+      return user;
     } catch (error) {
       console.log("error in getUserID..", error);
-      return null;
+      // return null;
     }
   },
   toDoList: async (task) => {
@@ -56,17 +60,17 @@ const postData = {
     // console.log("user id is: ", id);
 
     try {
-      const { tablesDB, account } = createWebClient(jwtToken);
+      // const { tablesDB, account } = createWebClient(jwtToken);
       // console.log(await account.get());
       // console.log(tablesDB);
-
+      client.setJWT(jwtToken);
       const promise = await tablesDB.createRow(
         "db1",
         "todolist",
         ID.unique(),
         {
           task: task,
-        },
+        }
         // [
         //   Permission.read(Role.user(id)),
         //   Permission.update(Role.user(id)),
@@ -87,7 +91,8 @@ const deleteData = {
     "use server";
     const jwtToken = (await cookies()).get("jwt").value;
     try {
-      const { tablesDB } = createWebClient(jwtToken);
+      // const { tablesDB } = createWebClient(jwtToken);
+      client.setJWT(jwtToken);
       await tablesDB.deleteRow("db1", "todolist", id);
 
       // return 1;

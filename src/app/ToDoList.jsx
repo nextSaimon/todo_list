@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import JWTWatcher from "./JWTWatcher";
 import Cookies from "js-cookie";
-import { createWebClient } from "@/lib/appwriteWeb";
+import { client, tablesDB, account } from "@/lib/appwriteWeb";
 
 export default function ToDoList({ initialRows, postToDo, deleteToDo }) {
   const [todos, setTodos] = useState([]);
@@ -11,6 +11,17 @@ export default function ToDoList({ initialRows, postToDo, deleteToDo }) {
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editedTodoText, setEditedTodoText] = useState("");
   const containerRef = useRef();
+  const userName = "Hello";
+  const jwtToken = Cookies.get("jwt");
+  // console.log(jwtToken);
+  client.setJWT(jwtToken);
+  useEffect(() => {
+    // client.set
+    const chanel = "databases.db1.tables.todolist.rows";
+    client.subscribe(chanel, (response) => {
+      console.log(response);
+    });
+  }, []);
 
   useEffect(() => {
     if (initialRows && initialRows.length > 0) {
