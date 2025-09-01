@@ -1,40 +1,39 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import JWTWatcher from "./JWTWatcher";
+import Cookies from "js-cookie";
+import { createWebClient } from "@/lib/appwriteWeb";
 
-export default function ToDoList({ rows }) {
-  // Map server rows to local todos state
+export default function ToDoList({ initialRows, postToDo, deleteToDo }) {
   const [todos, setTodos] = useState([]);
-
-  const [newTodo, setNewTodo] = useState("");
+  const [newTodo, setNewTodo, setOffset, setLoading, setHasMore] = useState("");
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editedTodoText, setEditedTodoText] = useState("");
-  const userName = "User Name"; // Placeholder for user's name
+  const containerRef = useRef();
 
-  // Initialize todos when rows come in
   useEffect(() => {
-    if (rows && rows.length > 0) {
-      setTodos(rows.map((r) => ({ id: r.$id, text: r.task })));
+    if (initialRows && initialRows.length > 0) {
+      setTodos(initialRows.map((r) => ({ id: r.$id, text: r.task })));
     }
-  }, [rows]);
+  }, [initialRows]);
 
-  const addTodo = () => {
-    if (newTodo.trim() !== "") {
-      setTodos([...todos, { id: Date.now().toString(), text: newTodo.trim() }]);
-      setNewTodo("");
-    }
+  const addTodo = async () => {
+    await postToDo(newTodo);
+    setNewTodo("");
+    // if (newTodo.trim() !== "") {
+
+    //   setTodos([...todos, { id: Date.now().toString(), text: newTodo.trim() }]);
+    //   setNewTodo("");
+    // }
   };
-
-  const deleteTodo = (id) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+  const deleteTodo = async (id) => {
+    await deleteToDo(id);
   };
-
   const startEditing = (todo) => {
     setEditingTodoId(todo.id);
     setEditedTodoText(todo.text);
   };
-
   const saveEdit = (id) => {
     setTodos(
       todos.map((todo) =>
@@ -46,8 +45,11 @@ export default function ToDoList({ rows }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
-      {/* Header */}
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-gray-100 flex flex-col items-center py-10 overflow-auto"
+      style={{ maxHeight: "100vh" }}
+    >
       <JWTWatcher />
       <header className="w-full max-w-2xl flex justify-between items-center mb-8 px-4">
         <h1 className="text-3xl font-bold text-gray-800">Todo List</h1>
@@ -120,7 +122,6 @@ export default function ToDoList({ rows }) {
                     {todo.text}
                   </span>
                 )}
-
                 <div className="flex space-x-2">
                   {editingTodoId === todo.id ? (
                     <div className="flex space-x-2">
@@ -141,19 +142,21 @@ export default function ToDoList({ rows }) {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => startEditing(todo)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition duration-200 ease-in-out"
-                    >
-                      Edit
-                    </button>
+                    <>
+                      <button
+                        onClick={() => startEditing(todo)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition duration-200 ease-in-out"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteTodo(todo.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md text-sm transition duration-200 ease-in-out"
+                      >
+                        Delete
+                      </button>
+                    </>
                   )}
-                  <button
-                    onClick={() => deleteTodo(todo.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md text-sm transition duration-200 ease-in-out"
-                  >
-                    Delete
-                  </button>
                 </div>
               </li>
             ))}

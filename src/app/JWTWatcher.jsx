@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-
 export default function JWTWatcher() {
   const [jwt, setJwt] = useState(Cookies.get("jwt"));
   const [session, setSession] = useState(Cookies.get("session"));
