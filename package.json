@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "appwrite": "^19.0.0",
+    "fs": "^0.0.1-security",
     "js-cookie": "^3.0.5",
     "next": "15.5.2",
     "node-appwrite": "^18.0.0",
