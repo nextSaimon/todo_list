@@ -61,7 +61,7 @@ export default function ToDoList({ initialRows, postToDo, deleteToDo }) {
       className="min-h-screen bg-gray-100 flex flex-col items-center py-10 overflow-auto"
       style={{ maxHeight: "100vh" }}
     >
-      <JWTWatcher />
+      {/* <JWTWatcher /> */}
       <header className="w-full max-w-2xl flex justify-between items-center mb-8 px-4">
         <h1 className="text-3xl font-bold text-gray-800">Todo List</h1>
         <div className="flex items-center space-x-4">

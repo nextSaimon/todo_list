@@ -1,6 +1,7 @@
 import { createSessionClient, createAdminClient } from "./lib/appwrite";
 import { ID } from "node-appwrite";
 import { cookies } from "next/headers";
+import CryptoJS from "crypto-js";
 
 const errorMessages = {
   userAlreadyExists: "User already exists",
@@ -26,13 +27,9 @@ const auth = {
   },
   getUser: async () => {
     "use server";
-
     const session = (await cookies()).get("session");
-
     const jwt = (await cookies()).get("jwt");
-
     if (!session) return (auth.user = null);
-
     try {
       const { account } = await createSessionClient(session.value);
       auth.user = await account.get();
@@ -43,54 +40,23 @@ const auth = {
     }
   },
 
-  login: async (email, password) => {
+  login: async (uderData) => {
     "use server";
-    if (!email || !password) {
-      return {
-        error: "All fields are required",
-      };
-    }
+    console.log("uderData ", uderData);
 
-    try {
-      const { account } = await createAdminClient();
-      const session = await account.createEmailPasswordSession(email, password);
-      // console.log("login session is......", session);
-      const isVerified = await auth.isVerified(session.secret);
-      console.log("isVerified", isVerified);
-      if (!isVerified) {
-        await auth.sendVerifyEmail(session.secret);
-        await auth.logout(session.secret);
-        return {
-          error: "Email not verified! A new link has been sent to your email.",
-        };
-      }
-      (await cookies()).set("session", session.secret, {
-        httpOnly: true,
-        sameSite: "strict",
-        secure: true,
-        expires: new Date(session.expire),
-        path: "/",
-      });
-      const jwt = await auth.setJWT(session.secret);
-      (await cookies()).set("jwt", jwt, {
-        httpOnly: false,
-        sameSite: "strict",
-        secure: true,
-        maxAge: 60 * 15,
-        path: "/",
-      });
-      return {
-        success: true,
-      };
-    } catch (error) {
-      console.log("Error in login......", error);
-      if (error?.type == "general_argument_invalid") {
-        return {
-          error: errorMessages.loginError,
-        };
-      }
-      return { error: error.message };
-    }
+    const session = CryptoJS.AES.encrypt(
+      `${uderData.$id};${uderData.userId}`,
+      `${process.env.NEXT_CRYPTO_KEY}`
+    ).toString();
+
+    console.log(session);
+    (await cookies()).set("session", session, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      expires: new Date(uderData.expire),
+      path: "/",
+    });
   },
   signup: async (name, email, password) => {
     "use server";
@@ -185,6 +151,11 @@ const auth = {
         error: error.message,
       };
     }
+  },
+  deleteCookies: async () => {
+    "use server";
+    (await cookies()).delete("session");
+    (await cookies()).delete("jwt");
   },
 };
 export default auth;

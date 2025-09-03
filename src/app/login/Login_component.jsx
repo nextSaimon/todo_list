@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { account } from "@/lib/appwriteWeb";
 
 export default function Login_component({ loginAction }) {
   const [loading, setLoading] = useState(false);
@@ -19,17 +20,28 @@ export default function Login_component({ loginAction }) {
       return null;
     }
     try {
-      const result = await loginAction(email, password);
-      console.log(result?.success);
-
-      if (result?.success) {
-        //redirect to login
-        route.push("/");
-      } else if (result?.error) {
-        setError(result?.error);
-      } else {
-        setError("Something went wrong!");
+      const currentUser = await account.get().catch(() => null);
+      if (currentUser) {
+        await account.deleteSession({
+          sessionId: "current",
+        });
+        console.log("session deleted");
       }
+      const result = await account.createEmailPasswordSession({
+        email,
+        password,
+      });
+      console.log(result);
+      await loginAction(result);
+
+      // if (result?.success) {
+      //   //redirect to login
+      //   route.push("/");
+      // } else if (result?.error) {
+      //   setError(result?.error);
+      // } else {
+      //   setError("Something went wrong!");
+      // }
     } catch (error) {
       console.log("Error to login in client side..", error);
     } finally {

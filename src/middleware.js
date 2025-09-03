@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import auth from "./auth";
+import { createAdminClient } from "./lib/appwrite";
+import CryptoJS from "crypto-js";
 
 const deleteClientCookies = (response, request) => {
   for (const [name] of request.cookies) {
@@ -8,38 +10,40 @@ const deleteClientCookies = (response, request) => {
 };
 
 export async function middleware(request) {
-  console.log("middleware called");
   const response = NextResponse.next();
+
   const session = request.cookies.get("session");
-  const authPages = ["/login", "/signup", "/verify-email"];
-
   if (!session) {
-    deleteClientCookies(response, request);
-    return NextResponse.redirect(new URL("/login", request.url));
+    deleteClientCookies(response, req);
+    return NextResponse.redirect(new URL("/login", req.url));
   }
+  // console.log(session);
+  const decode = CryptoJS.AES.decrypt(
+    session.value,
+    `${process.env.NEXT_CRYPTO_KEY}`
+  ).toString(CryptoJS.enc.Utf8);
+  // console.log("decode", decode);
 
-  const user = await auth.getUser();
-
-  if (!user) {
-    deleteClientCookies(response, request);
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  const jwt = request.cookies.get("jwt");
-  if (!jwt) {
-    const jwtToken = await auth.setJWT(session.value);
-    response.cookies.set("jwt", jwtToken, {
-      httpOnly: false,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 15,
-      path: "/",
+  const [sessionId, userId] = decode.split(";");
+  try {
+    const { users } = await createAdminClient();
+    const jwt = await users.createJWT({
+      userId,
+      // sessionId,
     });
+    console.log(jwt);
+
+    response.cookies.set("jwt", jwt.jwt, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 15 * 60 * 1000,
+    });
+  } catch (error) {
+    console.log(error);
+    deleteClientCookies(response, request);
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-  //  if user login and try to visite auth pages then redirect to home page
-  if (authPages.includes(request.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+
   return response;
 }
 
